@@ -7,6 +7,7 @@ import android.support.v7.widget.RecyclerView;
 import android.util.AttributeSet;
 import android.view.View;
 
+import com.ycj.learningdemo.MoveUtil;
 import com.ycj.learningdemo.MyLog;
 
 /**
@@ -14,29 +15,40 @@ import com.ycj.learningdemo.MyLog;
  */
 public class EventListBehavior extends CoordinatorLayout.Behavior<RecyclerView> {
 
-    private int mInitialOffset;
-    private int mMinOffset;
+    private int mInitialOffset = -1;
+    private int mTop;
 
     public EventListBehavior(Context context, AttributeSet attrs){
         super(context, attrs);
     }
 
+
     @Override
     public boolean onLayoutChild(CoordinatorLayout parent, RecyclerView child, int layoutDirection) {
-
-        MyLog.d("EventListBehavior onLayoutChild");
         parent.onLayoutChild(child, layoutDirection);
 
-        int index = parent.indexOfChild(child);
-        if (index > 0){
-            View preView = parent.getChildAt(index - 1);
-            int offset = preView.getBottom();
-            child.offsetTopAndBottom(offset);
-            mMinOffset = preView.getTop();
+        MonthPager monthPager = getMonthPager(parent);
+
+        if (monthPager.getBottom() > 0 && mInitialOffset == -1){
+            mInitialOffset = monthPager.getBottom();
+            child.offsetTopAndBottom(mInitialOffset);
+            mTop = mInitialOffset;
+        } else if (mInitialOffset != -1){
+            child.offsetTopAndBottom(mTop);
         }
 
-        mInitialOffset = child.getTop();
 
+        return true;
+    }
+
+    @Override
+    public boolean onMeasureChild(CoordinatorLayout parent, RecyclerView child, int parentWidthMeasureSpec, int widthUsed, int parentHeightMeasureSpec, int heightUsed) {
+        MyLog.d("EventListBehavior onMeasureChild heightUsed = "+heightUsed);
+
+        MonthPager monthPager = getMonthPager(parent);
+        final int measuredHeight = View.MeasureSpec.getSize(parentHeightMeasureSpec) - heightUsed - monthPager.getHeight() / 6;
+        int childMeasureSpec = View.MeasureSpec.makeMeasureSpec(measuredHeight, View.MeasureSpec.EXACTLY);
+        child.measure(parentWidthMeasureSpec, childMeasureSpec);
         return true;
     }
 
@@ -51,50 +63,28 @@ public class EventListBehavior extends CoordinatorLayout.Behavior<RecyclerView> 
     @Override
     public void onNestedScroll(CoordinatorLayout coordinatorLayout, RecyclerView child, View target, int dxConsumed, int dyConsumed, int dxUnconsumed, int dyUnconsumed) {
         super.onNestedScroll(coordinatorLayout, child, target, dxConsumed, dyConsumed, dxUnconsumed, dyUnconsumed);
-        MyLog.d("EventListBehavior: onNestedScroll");
-
 
     }
 
     @Override
     public void onNestedPreScroll(CoordinatorLayout coordinatorLayout, RecyclerView child, View target, int dx, int dy, int[] consumed) {
         super.onNestedPreScroll(coordinatorLayout, child, target, dx, dy, consumed);
-        MyLog.d("EventListBehavior: onNestedPreScroll");
 
         //When not at the top, consume all scrolling for the card
-        if (child.getTop() <= mInitialOffset && child.getTop() > mInitialOffset - getMonthPager(coordinatorLayout).getTopDistance()) {
+        if (child.getTop() <= mInitialOffset && child.getTop() >= mInitialOffset - getMonthPager(coordinatorLayout).getWholeMovableDistance()) {
             //Tell the parent what we've consumed
-            consumed[1] = move(child, dy, mInitialOffset - getMonthPager(coordinatorLayout).getTopDistance(), mInitialOffset);
-
-            getMonthPager(coordinatorLayout).scrollBy(0, consumed[1]);
-        } else if (child.getTop() <= mInitialOffset && child.getTop() >= mInitialOffset - getMonthPager(coordinatorLayout).getBottomDistance()){
-            consumed[1] = move(child, dy,  mInitialOffset - getMonthPager(coordinatorLayout).getBottomDistance(), mInitialOffset);
+            consumed[1] = MoveUtil.move(child, dy, mInitialOffset - getMonthPager(coordinatorLayout).getWholeMovableDistance(), mInitialOffset);
+            mTop = child.getTop();
         }
     }
+
 
     private MonthPager getMonthPager(CoordinatorLayout coordinatorLayout){
-        return (MonthPager)coordinatorLayout.getChildAt(1);
+        return (MonthPager)coordinatorLayout.getChildAt(0);
     }
 
-    //Scroll the view and return back the actual distance scrolled
-    private int move(View child, int dy, int minOffset, int maxOffset) {
-        final int initialOffset = child.getTop();
-        //Clamped new position - initial position = offset change
-        int delta = clamp(initialOffset - dy, minOffset, maxOffset) - initialOffset;
-        child.offsetTopAndBottom(delta);
 
-        return -delta;
-    }
 
-    private int clamp(int value, int min, int max) {
-        if (value > max) {
-            return max;
-        } else if (value < min) {
-            return min;
-        } else {
-            return value;
-        }
-    }
 
 
 }

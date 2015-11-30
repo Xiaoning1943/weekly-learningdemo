@@ -1,22 +1,32 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.design.widget.CoordinatorLayout
+<LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    tools:context="com.ycj.learningdemo.a0_support_design_library.CoordinatorActivity"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    tools:context="com.ycj.learningdemo.a0_support_design_library.CoordinatorActivity">
+    android:orientation="vertical"
+    >
     <com.ycj.learningdemo.a0_support_design_library.WeekLabelView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"/>
-    <com.ycj.learningdemo.a0_support_design_library.MonthPager
+    <android.support.design.widget.CoordinatorLayout
+        xmlns:tools="http://schemas.android.com/tools"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"/>
-    <android.support.v7.widget.RecyclerView
-        android:id="@+id/list"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        app:layout_behavior="com.ycj.learningdemo.a0_support_design_library.EventListBehavior"
-        android:background="#C0C0C0"/>
+        android:layout_height="match_parent">
 
-</android.support.design.widget.CoordinatorLayout>
+        <com.ycj.learningdemo.a0_support_design_library.MonthPager
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/list"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            app:layout_behavior="com.ycj.learningdemo.a0_support_design_library.EventListBehavior"
+            android:background="#C0C0C0"/>
+
+    </android.support.design.widget.CoordinatorLayout>
+
+</LinearLayout>
+

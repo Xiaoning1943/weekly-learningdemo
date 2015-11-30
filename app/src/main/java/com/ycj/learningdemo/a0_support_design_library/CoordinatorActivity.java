@@ -55,7 +55,13 @@ public class CoordinatorActivity extends AppCompatActivity {
         @Override
         public void onBindViewHolder(ViewHolder holder, int position) {
             Button button = (Button)holder.itemView;
-            button.setText("Event id = "+ position);
+            if (position == 29){
+                button.setText("Last Event id = " + position);
+
+            } else {
+                button.setText("Event id = " + position);
+
+            }
         }
 
 

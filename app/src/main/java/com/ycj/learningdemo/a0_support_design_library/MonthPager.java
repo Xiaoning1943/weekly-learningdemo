@@ -6,6 +6,7 @@ import android.graphics.drawable.ColorDrawable;
 import android.support.design.widget.CoordinatorLayout;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
+import android.support.v7.widget.RecyclerView;
 import android.util.AttributeSet;
 import android.view.Gravity;
 import android.view.View;
@@ -28,28 +29,33 @@ public class MonthPager extends ViewPager {
 
     private int selectedIndex;
 
+
     public MonthPager(Context context) {
         this(context, null);
     }
 
     public MonthPager(Context context, AttributeSet attrs) {
         super(context, attrs);
+        setBackgroundColor(0x24901289);
         setAdapter(new MonthPagerAdapter(context));
     }
 
-    public int getTopDistance() {
+    public int getTopMovableDistance() {
         int rowCount = selectedIndex / 7;
-        return getHeight()/6*rowCount;
+        return getHeight() / 6 * rowCount;
     }
 
-    public int getBottomDistance() {
-        return getHeight()/6 * 5;
+    public int getWholeMovableDistance() {
+        return getHeight() / 6 * 5;
     }
 
     @Override
     protected void onLayout(boolean changed, int l, int t, int r, int b) {
         super.onLayout(changed, l, t, r, b);
+        MyLog.d("MonthPager onLayout height = " + (b - t));
+        MyLog.d("MonthPager onLayout width = " + (r - l));
     }
+
 
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
 
@@ -205,20 +211,44 @@ public class MonthPager extends ViewPager {
 
     public static class Behavior extends CoordinatorLayout.Behavior<MonthPager> {
 
+        private int mTop;
+
+
+        @Override
+        public boolean layoutDependsOn(CoordinatorLayout parent, MonthPager child, View dependency) {
+            MyLog.d("MonthPager.Behavior: layoutDependsOn");
+            return dependency instanceof RecyclerView;
+        }
+
         @Override
         public boolean onLayoutChild(CoordinatorLayout parent, MonthPager child, int layoutDirection) {
-
-            MyLog.d("MonthPager.Behavior onLayoutChild");
+            MyLog.d("MonthPager.Behavior: onLayoutChild mTop = " + mTop);
             parent.onLayoutChild(child, layoutDirection);
-
-            int index = parent.indexOfChild(child);
-            if (index > 0) {
-                View preView = parent.getChildAt(index - 1);
-                int offset = preView.getBottom();
-                child.offsetTopAndBottom(offset);
-            }
-
+            child.offsetTopAndBottom(mTop);
             return true;
         }
+
+        private int dependentViewTop = -1;
+
+
+        @Override
+        public boolean onDependentViewChanged(CoordinatorLayout parent, MonthPager child, View dependency) {
+
+            if (dependentViewTop != -1) {
+                int dy = dependency.getTop() - dependentViewTop;
+                int top = child.getTop();
+
+                if (dy > -top) dy = -top;
+
+                if (dy < -top - child.getTopMovableDistance())
+                    dy = -top - child.getTopMovableDistance();
+
+                child.offsetTopAndBottom(dy);
+            }
+            dependentViewTop = dependency.getTop();
+            mTop = child.getTop();
+            return true;
+        }
+
     }
 }
